@@ -12,7 +12,7 @@
 	},
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/cvet/fonline.git"
+		"url": "https://github.com/cvet/fonline-vscode.git"
 	},
 	"publisher": "cvet",
 	"version": "1.0.0",
@@ -131,6 +131,7 @@
 	},
 	"scripts": {
 		"package": "vsce package",
+		"publish": "vsce publish patch",
 		"vscode:prepublish": "npm run compile",
 		"compile": "tsc -p ./",
 		"lint": "eslint src --ext ts",
