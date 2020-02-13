@@ -109,3 +109,4 @@ dist
 # FOnline
 /.vscode/launch.json
 /out
+/fonline-vscode-*
