@@ -31,6 +31,16 @@
 	"main": "./out/extension.js",
 	"enableProposedApi": true,
 	"contributes": {
+		"configuration": {
+			"title": "FOnline",
+			"properties": {
+				"fonline.path": {
+					"type": "string",
+					"description": "Path to the FOnline Engine repository",
+					"scope": "machine-overridable"
+				}
+			}
+		},
 		"commands": [
 			{
 				"command": "extension.run",
