@@ -26,7 +26,7 @@
 		"Other"
 	],
 	"activationEvents": [
-		"*"
+		"workspaceContains:fonline*.json"
 	],
 	"main": "./out/extension.js",
 	"enableProposedApi": true,
@@ -81,10 +81,6 @@
 		],
 		"keybindings": [
 			{
-				"command": "extension.run",
-				"key": "f5"
-			},
-			{
 				"command": "extension.compile",
 				"key": "f6"
 			},
@@ -95,10 +91,6 @@
 		],
 		"menus": {
 			"editor/title": [
-				{
-					"command": "extension.run",
-					"group": "navigation@-3"
-				},
 				{
 					"command": "extension.compile",
 					"group": "navigation@-2",
@@ -112,29 +104,14 @@
 			]
 		},
 		"views": {
-			"terminalManager": [
-				{
-					"id": "terminalManager",
-					"name": "Terminals"
-				}
-			],
 			"explorer": [
 				{
-					"id": "componentsView",
-					"name": "Components"
+					"id": "projectExplorer",
+					"name": "Project Explorer"
 				},
 				{
-					"id": "fileExplorer",
-					"name": "File Explorer"
-				}
-			]
-		},
-		"viewsContainers": {
-			"activitybar": [
-				{
-					"id": "terminalManager",
-					"title": "Terminal Manager",
-					"icon": "resources/terminal.png"
+					"id": "actionManager",
+					"name": "Actions"
 				}
 			]
 		}
@@ -151,8 +128,10 @@
 	},
 	"devDependencies": {
 		"@types/glob": "^7.1.1",
+		"@types/mkdirp": "^1.0.0",
 		"@types/mocha": "^7.0.1",
 		"@types/node": "^12.12.27",
+		"@types/rimraf": "^2.0.3",
 		"@types/vscode": "^1.42.0",
 		"@typescript-eslint/eslint-plugin": "^2.19.2",
 		"@typescript-eslint/parser": "^2.19.2",
@@ -166,6 +145,8 @@
 		"jqpropertygrid": "^1.0.0",
 		"jquery": "^3.4.1",
 		"jqueryui": "^1.11.1",
+		"mkdirp": "^1.0.3",
+		"rimraf": "^3.0.2",
 		"uikit": "^3.3.1"
 	},
 	"extensionPack": [
