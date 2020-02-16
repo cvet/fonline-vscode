@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
-import * as config from './config'
+import * as childProcess from 'child_process';
+import * as config from './config';
 
 interface ActionTreeEntry {
     label: string;
@@ -57,22 +58,27 @@ export async function init(context: vscode.ExtensionContext) {
     context.subscriptions.push(vscode.window.createTreeView('actionManager', { treeDataProvider: new ActionTree(actions) }));
 }
 
-export async function execute(label: string, ...shellArgs: string[]): Promise<number> {
-    const action = vscode.window.createTerminal({
-        name: label,
-        shellPath: config.wslShellPath,
-        shellArgs: shellArgs.concat('exit'),
+export async function execute(command: string, ...shellArgs: string[]): Promise<number> {
+    const foRoot = config.fonlineWslPath;
+    const foWorkspace = config.workspaceWslPath;
+    const env = `export FO_ROOT=${foRoot}; export FO_WORKSPACE=${foWorkspace}; export FO_INSTALL_PACKAGES=0`;
+
+    let exitCode: number | undefined;
+    childProcess.exec(`wsl ${env}; ${command}`, {
         cwd: config.fonlinePath,
-        hideFromUser: true
+        windowsHide: true
+    }, (error: childProcess.ExecException | null, stdout: string, stderr: string) => {
+        exitCode = error ? error.code : 0;
+        console.log('execute', command, exitCode)
     });
 
     function sleep(ms: number): Promise<void> {
         return new Promise(resolve => setTimeout(resolve, ms));
     }
-    while (action.exitStatus === undefined)
+    while (exitCode === undefined)
         await sleep(5);
 
-    return action.exitStatus.code ?? -1;
+    return exitCode;
 }
 
 class ActionTree implements vscode.TreeDataProvider<ActionTreeEntry> {

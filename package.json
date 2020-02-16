@@ -15,7 +15,7 @@
 		"url": "https://github.com/cvet/fonline-vscode.git"
 	},
 	"publisher": "cvet",
-	"version": "1.0.2",
+	"version": "0.1.1",
 	"license": "MIT",
 	"preview": true,
 	"icon": "resources/radiation.png",
@@ -29,7 +29,6 @@
 		"workspaceContains:fonline*.json"
 	],
 	"main": "./out/extension.js",
-	"enableProposedApi": true,
 	"contributes": {
 		"configuration": {
 			"title": "FOnline",

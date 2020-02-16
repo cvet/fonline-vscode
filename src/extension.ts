@@ -35,7 +35,7 @@ async function init(context: vscode.ExtensionContext) {
 }
 
 async function checkReadiness(): Promise<void> {
-  if (await actions.execute('Check WSL') != 0) {
+  if (await actions.execute('echo') != 0) {
     const message = 'Windows Subsystem for Linux is not installed (required WSL2 and Ubuntu-18.04 as distro)';
     vscode.window.showErrorMessage(message, 'WSL Installation Guide').then((value?: string) => {
       if (value === 'WSL Installation Guide')
