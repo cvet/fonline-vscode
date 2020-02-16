@@ -1,17 +1,23 @@
 import * as vscode from 'vscode';
 import * as fs from './fileSystem'
-
-let fileExplorer: vscode.TreeView<Entry>;
-
-export async function init(context: vscode.ExtensionContext) {
-    const treeDataProvider = new FileSystemProvider();
-    fileExplorer = vscode.window.createTreeView('projectExplorer', { treeDataProvider });
-    vscode.commands.registerCommand('fileExplorer.openFile', (resource) => { vscode.window.showTextDocument(resource); });
-}
+import * as config from './config'
 
 interface Entry {
     uri: vscode.Uri;
     type: vscode.FileType;
+}
+
+let fileExplorer: vscode.TreeView<Entry>;
+
+export async function init(context: vscode.ExtensionContext) {
+    const entries: Entry[] = [];
+    for (const files of config.files) {
+        // ...
+    }
+
+    const treeDataProvider = new FileSystemProvider(entries);
+    fileExplorer = vscode.window.createTreeView('projectExplorer', { treeDataProvider });
+    vscode.commands.registerCommand('fileExplorer.openFile', (resource) => { vscode.window.showTextDocument(resource); });
 }
 
 class FileStat implements vscode.FileStat {
@@ -52,7 +58,7 @@ class FileStat implements vscode.FileStat {
 class FileSystemProvider implements vscode.TreeDataProvider<Entry>, vscode.FileSystemProvider {
     private _onDidChangeFile: vscode.EventEmitter<vscode.FileChangeEvent[]>;
 
-    constructor() {
+    constructor(private _rootEntries: Entry[]) {
         this._onDidChangeFile = new vscode.EventEmitter<vscode.FileChangeEvent[]>();
     }
 
@@ -183,27 +189,15 @@ class FileSystemProvider implements vscode.TreeDataProvider<Entry>, vscode.FileS
     async getChildren(element?: Entry): Promise<Entry[]> {
         if (element) {
             const children = await this.readDirectory(element.uri);
+            children.sort((a, b) => {
+                if (a[1] === b[1]) {
+                    return a[0].localeCompare(b[0]);
+                }
+                return a[1] === vscode.FileType.Directory ? -1 : 1;
+            });
             return children.map(([name, type]) => ({ uri: vscode.Uri.file(fs.joinPath(element.uri.fsPath, name)), type }));
         }
-
-        if (vscode.workspace.workspaceFolders) {
-            const workspaceFolders = vscode.workspace.workspaceFolders.filter(folder => folder.uri.scheme === 'file');
-            let entries: Entry[] = [];
-            for (let folder of workspaceFolders) {
-                //const fonlineWorkspace = workspaceFolders.indexOf(folder) == 0;
-                const children = await this.readDirectoryRecusivly(folder.uri);
-                children.sort((a, b) => {
-                    if (a[1] === b[1]) {
-                        return a[0].localeCompare(b[0]);
-                    }
-                    return a[1] === vscode.FileType.Directory ? -1 : 1;
-                });
-                entries.push(...children.map(([name, type]) => ({ uri: vscode.Uri.file(fs.joinPath(folder.uri.fsPath, name)), type })));
-            }
-            return entries;
-        }
-
-        return [];
+        return this._rootEntries;
     }
 
     getTreeItem(element: Entry): vscode.TreeItem {

@@ -20,7 +20,7 @@ export async function init(context: vscode.ExtensionContext) {
         if (actionEntry.command) {
             const foRoot = config.fonlineWslPath;
             const foWorkspace = config.workspaceWslPath;
-            const env = `export FO_ROOT=${foRoot}; export FO_WORKSPACE=${foWorkspace}; export FO_INSTALL_PACKAGES=0`;;
+            const env = `export FO_ROOT=${foRoot}; export FO_WORKSPACE=${foWorkspace}; export FO_INSTALL_PACKAGES=0`;
             shellArgs = `${env}; ${actionEntry.command}; read -p "Press enter to close action..."`;
         }
 

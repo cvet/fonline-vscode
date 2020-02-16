@@ -30,7 +30,7 @@ export function deactivate() {
 async function init(context: vscode.ExtensionContext) {
   await config.init(context);
   await actions.init(context);
-  await projectExplorer.init(context);
+  // await projectExplorer.init(context);
   await checkReadiness();
 }
 

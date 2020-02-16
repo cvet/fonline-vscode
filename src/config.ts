@@ -15,8 +15,8 @@ export async function init(context: vscode.ExtensionContext) {
         workspacePath = fs.joinPath(vscode.workspace.workspaceFolders[0].uri.fsPath, workspacePath);
     else
         workspacePath = fs.resolvePath(workspacePath);
-    fonlineWslPath = winToWslPath(workspacePath);
-    console.log('workspacePath', workspacePath);
+    workspaceWslPath = winToWslPath(workspacePath);
+    console.log('workspacePath', workspacePath, workspaceWslPath);
 
     // Evaluate fonline path
     let foPath: string | undefined;
@@ -48,9 +48,9 @@ export async function init(context: vscode.ExtensionContext) {
         if (!fs.isAbsolutePath(foPath))
             foPath = fs.resolvePath(foPath);
         fonlinePath = foPath;
-        console.log('fonlinePath', fonlinePath);
     }
     fonlineWslPath = winToWslPath(fonlinePath);
+    console.log('fonlinePath', fonlinePath, fonlineWslPath);
 
     // Collect engine configs
     const configPattern = new RegExp(/fonline.*\.json/);
