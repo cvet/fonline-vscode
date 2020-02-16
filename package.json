@@ -15,7 +15,7 @@
 		"url": "https://github.com/cvet/fonline-vscode.git"
 	},
 	"publisher": "cvet",
-	"version": "1.0.1",
+	"version": "1.0.2",
 	"license": "MIT",
 	"preview": true,
 	"icon": "resources/radiation.png",
