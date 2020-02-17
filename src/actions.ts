@@ -21,8 +21,8 @@ export async function init(context: vscode.ExtensionContext) {
         if (actionEntry.command) {
             const foRoot = config.fonlineWslPath;
             const foWorkspace = config.workspaceWslPath;
-            const env = `export FO_ROOT=${foRoot}; export FO_WORKSPACE=${foWorkspace}; export FO_INSTALL_PACKAGES=0`;
-            shellArgs = `${env}; ${actionEntry.command}; read -p "Press enter to close action..."`;
+            const env = `export FO_ROOT=${foRoot}; export FO_WORKSPACE=${foWorkspace}`;
+            shellArgs = `${env}; ${actionEntry.command}; read -p "Press enter to close terminal..."`;
         }
 
         const commandName = 'extension.' + label.substr(0, 1).toLowerCase() + label.replace(/ /g, '').substr(1);
@@ -61,7 +61,7 @@ export async function init(context: vscode.ExtensionContext) {
 export async function execute(command: string, ...shellArgs: string[]): Promise<number> {
     const foRoot = config.fonlineWslPath;
     const foWorkspace = config.workspaceWslPath;
-    const env = `export FO_ROOT=${foRoot}; export FO_WORKSPACE=${foWorkspace}; export FO_INSTALL_PACKAGES=0`;
+    const env = `export FO_ROOT=${foRoot}; export FO_WORKSPACE=${foWorkspace}`;
 
     let exitCode: number | undefined;
     childProcess.exec(`wsl ${env}; ${command}`, {
