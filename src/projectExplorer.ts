@@ -3,19 +3,33 @@ import * as fs from './fileSystem'
 import * as config from './config'
 
 interface Entry {
-    uri: vscode.Uri;
-    type: vscode.FileType;
+    label: string,
+    uri?: vscode.Uri;
+    children?: Entry[];
 }
 
 let fileExplorer: vscode.TreeView<Entry>;
 
 export async function init(context: vscode.ExtensionContext) {
-    const entries: Entry[] = [];
-    for (const files of config.files) {
-        // ...
+    const rootEntries: Entry[] = [];
+    for (const f of config.files) {
+        const pattern = new RegExp(f.pattern);
+        const entries: Entry[] = [];
+        async function readRecursively(path: string) {
+            for (const child of await fs.readdir(path)) {
+                const stat = await fs.stat(fs.joinPath(path, child));
+                if (stat.isDirectory())
+                    await readRecursively(fs.joinPath(path, child));
+                else if (pattern.test(child))
+                    entries.push({ label: child, uri: vscode.Uri.file(fs.joinPath(path, child)) });
+            }
+        }
+        await readRecursively(f.path);
+        if (entries.length > 0)
+            rootEntries.push({ label: f.label, children: entries });
     }
 
-    const treeDataProvider = new FileSystemProvider(entries);
+    const treeDataProvider = new FileSystemProvider(rootEntries);
     fileExplorer = vscode.window.createTreeView('projectExplorer', { treeDataProvider });
     vscode.commands.registerCommand('fileExplorer.openFile', (resource) => { vscode.window.showTextDocument(resource); });
 }
@@ -188,24 +202,22 @@ class FileSystemProvider implements vscode.TreeDataProvider<Entry>, vscode.FileS
 
     async getChildren(element?: Entry): Promise<Entry[]> {
         if (element) {
-            const children = await this.readDirectory(element.uri);
-            children.sort((a, b) => {
-                if (a[1] === b[1]) {
-                    return a[0].localeCompare(b[0]);
-                }
-                return a[1] === vscode.FileType.Directory ? -1 : 1;
-            });
-            return children.map(([name, type]) => ({ uri: vscode.Uri.file(fs.joinPath(element.uri.fsPath, name)), type }));
+            return element.children ?? [];
         }
         return this._rootEntries;
     }
 
     getTreeItem(element: Entry): vscode.TreeItem {
-        const treeItem = new vscode.TreeItem(element.uri, element.type === vscode.FileType.Directory ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None);
-        if (element.type === vscode.FileType.File) {
-            treeItem.command = { command: 'fileExplorer.openFile', title: "Open File", arguments: [element.uri], };
-            treeItem.contextValue = 'file';
+        if (element.children) {
+            return {
+                label: element.label,
+                collapsibleState: vscode.TreeItemCollapsibleState.Collapsed
+            }
+        } else {
+            return {
+                label: element.label,
+                command: { command: 'fileExplorer.openFile', title: 'Open File', arguments: [element.uri] }
+            }
         }
-        return treeItem;
     }
 }

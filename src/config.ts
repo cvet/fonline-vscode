@@ -6,8 +6,8 @@ export let fonlinePath: string = '';
 export let fonlineWslPath: string;
 export let workspacePath: string = 'Workspace';
 export let workspaceWslPath: string;
+export const files: { label: string, path: string, pattern: string }[] = [];
 export const actions: { label: string, group: string, command?: string }[] = [];
-export const files: { label: string, fsPath: string }[] = [];
 
 export async function init(context: vscode.ExtensionContext) {
     // Evaluate workspace path
@@ -67,7 +67,12 @@ export async function init(context: vscode.ExtensionContext) {
         const json = JSON.parse(buf.toString());
 
         if (json.files) {
-            for (const files of json.files) {
+            for (const f of json.files) {
+                files.push({
+                    label: f.label,
+                    path: fs.joinPath(fs.dirName(filePath), f.path),
+                    pattern: f.pattern
+                })
             }
         }
 

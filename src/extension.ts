@@ -42,13 +42,11 @@ async function checkReadiness(): Promise<void> {
         vscode.env.openExternal(vscode.Uri.parse('https://docs.microsoft.com/en-us/windows/wsl/wsl2-install'));
     });
   } else {
-    const workspaceStatus = await actions.execute('BuildTools/check-workspace.sh');
+    const workspaceStatus = await actions.execute('BuildTools/prepare-workspace.sh all check');
     if (workspaceStatus != 0) {
       let message: string;
       if (workspaceStatus == 10)
-        message = 'Workspace is not created';
-      else if (workspaceStatus == 11)
-        message = 'Workspace is outdated';
+        message = 'Workspace is not created or outdated';
       else
         message = 'Can\'t determine workspace state';
 
