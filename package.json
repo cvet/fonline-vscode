@@ -42,49 +42,17 @@
 		},
 		"commands": [
 			{
-				"command": "extension.run",
-				"title": "Run",
-				"icon": {
-					"light": "./resources/run.png",
-					"dark": "./resources/run.png"
-				}
-			},
-			{
 				"command": "extension.compile",
 				"title": "Compile",
 				"icon": {
-					"light": "./resources/compile.png",
-					"dark": "./resources/compile.png"
+					"light": "./resources/compile-light.png",
+					"dark": "./resources/compile-dark.png"
 				}
-			},
-			{
-				"command": "extension.build",
-				"title": "Build",
-				"icon": {
-					"light": "./resources/build.png",
-					"dark": "./resources/build.png"
-				}
-			},
-			{
-				"command": "fileExplorer.refreshFile",
-				"title": "Refresh",
-				"icon": {
-					"light": "resources/light/refresh.svg",
-					"dark": "resources/dark/refresh.svg"
-				}
-			},
-			{
-				"command": "fileExplorer.openFile",
-				"title": "Open File"
 			}
 		],
 		"keybindings": [
 			{
 				"command": "extension.compile",
-				"key": "f6"
-			},
-			{
-				"command": "extension.build",
 				"key": "f7"
 			}
 		],
@@ -92,13 +60,7 @@
 			"editor/title": [
 				{
 					"command": "extension.compile",
-					"group": "navigation@-2",
-					"when": "resourceExtname == .cpp"
-				},
-				{
-					"command": "extension.build",
-					"group": "navigation@-1",
-					"when": "resourceExtname == .cpp || resourceExtname == .h"
+					"group": "navigation"
 				}
 			]
 		},

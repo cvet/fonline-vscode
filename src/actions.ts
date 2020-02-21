@@ -10,7 +10,6 @@ interface ActionTreeEntry {
 }
 
 export async function init(context: vscode.ExtensionContext) {
-
     const actions: ActionTreeEntry[] = [];
 
     for (const actionEntry of config.actions) {
@@ -72,11 +71,9 @@ export async function execute(command: string, ...shellArgs: string[]): Promise<
         console.log('execute', command, exitCode)
     });
 
-    function sleep(ms: number): Promise<void> {
-        return new Promise(resolve => setTimeout(resolve, ms));
+    while (exitCode === undefined) {
+        await new Promise(resolve => setTimeout(resolve, 100));
     }
-    while (exitCode === undefined)
-        await sleep(5);
 
     return exitCode;
 }
