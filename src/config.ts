@@ -39,6 +39,9 @@ export async function init(context: vscode.ExtensionContext) {
         if (foPath)
             console.log('FONLINE_PATH', foPath);
     }
+    if (!foPath && fs.exists('setup.ps1') && fs.exists('fonline.json')) {
+        foPath = fs.resolvePath('.');
+    }
     if (!foPath) {
         vscode.window.showErrorMessage('FOnline Engine not found', 'Specify path').then((answer?: string) => {
             if (answer === 'Specify path')

@@ -54,7 +54,8 @@ export async function init(context: vscode.ExtensionContext) {
         }
     }
 
-    context.subscriptions.push(vscode.window.createTreeView('actionManager', { treeDataProvider: new ActionTree(actions) }));
+    const actionsTree = vscode.window.createTreeView('fonline-actions', { treeDataProvider: new ActionTree(actions) });
+    context.subscriptions.push(actionsTree);
 }
 
 export async function execute(command: string, ...shellArgs: string[]): Promise<number> {
@@ -89,6 +90,7 @@ class ActionTree implements vscode.TreeDataProvider<ActionTreeEntry> {
     getTreeItem(element: ActionTreeEntry): vscode.TreeItem {
         return {
             label: element.label,
+            tooltip: `Open ${element.label}`,
             collapsibleState: element.children ? vscode.TreeItemCollapsibleState.Collapsed : undefined,
             command: element.command ? { command: element.command, title: element.label } : undefined
         }

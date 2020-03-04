@@ -45,8 +45,8 @@
 				"command": "extension.compile",
 				"title": "Compile",
 				"icon": {
-					"light": "./resources/compile-light.png",
-					"dark": "./resources/compile-dark.png"
+					"light": "resources/compile-light.png",
+					"dark": "resources/compile-dark.png"
 				}
 			}
 		],
@@ -64,11 +64,28 @@
 				}
 			]
 		},
-		"views": {
-			"explorer": [
+		"viewsContainers": {
+			"activitybar": [
 				{
-					"id": "actionManager",
+					"id": "fonline",
+					"title": "FOnline",
+					"icon": "resources/activity.png"
+				}
+			]
+		},
+		"views": {
+			"fonline": [
+				{
+					"id": "fonline-actions",
 					"name": "Actions"
+				},
+				{
+					"id": "fonline-content",
+					"name": "Content"
+				},
+				{
+					"id": "fonline-resources",
+					"name": "Resources"
 				}
 			]
 		}
