@@ -6,7 +6,8 @@ export let fonlinePath: string = '';
 export let fonlineWslPath: string;
 export let workspacePath: string = 'Workspace';
 export let workspaceWslPath: string;
-export const files: { label: string, path: string, pattern: string }[] = [];
+export const content: { label: string, path: string, type: string }[] = [];
+export const resources: { label: string, path: string, type: string }[] = [];
 export const actions: { label: string, group: string, command?: string }[] = [];
 
 export async function init(context: vscode.ExtensionContext) {
@@ -25,6 +26,7 @@ export async function init(context: vscode.ExtensionContext) {
             if (folder.uri.scheme == 'file') {
                 foPath = vscode.workspace.getConfiguration('fonline', folder).get<string>('path');
                 if (foPath) {
+                    console.log('take fonline path from workspace folder');
                     foPath = fs.joinPath(folder.uri.fsPath, foPath);
                     break;
                 }
@@ -33,17 +35,26 @@ export async function init(context: vscode.ExtensionContext) {
     }
     if (!foPath) {
         foPath = vscode.workspace.getConfiguration('fonline').get<string>('path');
+        if (foPath) {
+            console.log('take fonline path from workspace');
+        }
     }
     if (!foPath) {
         foPath = process.env.FONLINE_PATH;
-        if (foPath)
-            console.log('FONLINE_PATH', foPath);
+        if (foPath) {
+            console.log('take fonline path from env var');
+        }
     }
-    if (!foPath && fs.exists('setup.ps1') && fs.exists('fonline.json')) {
+    if (!foPath && await fs.exists('setup.ps1') && await fs.exists('fonline.json')) {
+        console.log('take fonline path from cur dir');
         foPath = fs.resolvePath('.');
     }
+    if (!foPath && await fs.exists('../../setup.ps1') && await fs.exists('../../fonline.json')) {
+        console.log('take fonline path from dir two steps outside');
+        foPath = fs.resolvePath('../../');
+    }
     if (!foPath) {
-        vscode.window.showErrorMessage('FOnline Engine not found', 'Specify path').then((answer?: string) => {
+        await vscode.window.showErrorMessage('FOnline Engine not found', 'Specify path').then((answer?: string) => {
             if (answer === 'Specify path')
                 vscode.commands.executeCommand('workbench.action.openGlobalSettings');
         });
@@ -69,24 +80,40 @@ export async function init(context: vscode.ExtensionContext) {
         const buf = await fs.readfile(filePath);
         const json = JSON.parse(buf.toString());
 
-        if (json.files) {
-            for (const f of json.files) {
-                files.push({
-                    label: f.label,
-                    path: fs.joinPath(fs.dirName(filePath), f.path),
-                    pattern: f.pattern
-                })
+        if (json.content) {
+            const newContent = [];
+            for (const e of json.content) {
+                newContent.push({
+                    label: e.label,
+                    path: fs.joinPath(fs.dirName(filePath), e.path),
+                    type: e.type
+                });
             }
+            content.unshift(...newContent);
+        }
+
+        if (json.resources) {
+            const newResources = [];
+            for (const e of json.resources) {
+                newResources.push({
+                    label: e.label,
+                    path: fs.joinPath(fs.dirName(filePath), e.path),
+                    type: e.type
+                });
+            }
+            resources.unshift(...newResources);
         }
 
         if (json.actions) {
+            const newActions = [];
             for (const action of json.actions) {
-                actions.push({
+                newActions.push({
                     label: action.label,
                     group: action.group,
                     command: action.command
                 });
             }
+            actions.unshift(...newActions);
         }
     }
 

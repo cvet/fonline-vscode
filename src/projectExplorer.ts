@@ -8,29 +8,32 @@ interface Entry {
     children?: Entry[];
 }
 
-let fileExplorer: vscode.TreeView<Entry>;
-
 export async function init(context: vscode.ExtensionContext) {
-    const rootEntries: Entry[] = [];
-    for (const f of config.files) {
-        const pattern = new RegExp(f.pattern);
-        const entries: Entry[] = [];
-        async function readRecursively(path: string) {
-            for (const child of await fs.readdir(path)) {
-                const stat = await fs.stat(fs.joinPath(path, child));
-                if (stat.isDirectory())
-                    await readRecursively(fs.joinPath(path, child));
-                else if (pattern.test(child))
-                    entries.push({ label: child, uri: vscode.Uri.file(fs.joinPath(path, child)) });
+    async function fill(files: { label: string, path: string, type: string }[]): Promise<Entry[]> {
+        const rootEntries: Entry[] = [];
+        for (const f of files) {
+            const entries: Entry[] = [];
+            async function readRecursively(path: string) {
+                for (const child of await fs.readdir(path)) {
+                    const stat = await fs.stat(fs.joinPath(path, child));
+                    if (stat.isDirectory())
+                        await readRecursively(fs.joinPath(path, child));
+                    else
+                        entries.push({ label: child, uri: vscode.Uri.file(fs.joinPath(path, child)) });
+                }
             }
+            await readRecursively(f.path);
+            if (entries.length > 0)
+                rootEntries.push({ label: f.label, children: entries });
         }
-        await readRecursively(f.path);
-        if (entries.length > 0)
-            rootEntries.push({ label: f.label, children: entries });
+        return rootEntries;
     }
 
-    const treeDataProvider = new FileSystemProvider(rootEntries);
-    fileExplorer = vscode.window.createTreeView('projectExplorer', { treeDataProvider });
+    const contentTree = vscode.window.createTreeView('fonline-content', { treeDataProvider: new FileSystemProvider(await fill(config.content)) });
+    context.subscriptions.push(contentTree);
+    const resourcesTree = vscode.window.createTreeView('fonline-resources', { treeDataProvider: new FileSystemProvider(await fill(config.resources)) });
+    context.subscriptions.push(resourcesTree);
+
     vscode.commands.registerCommand('fileExplorer.openFile', (resource) => { vscode.window.showTextDocument(resource); });
 }
 
