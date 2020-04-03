@@ -26,7 +26,7 @@
 		"Other"
 	],
 	"activationEvents": [
-		"workspaceContains:fonline*.json"
+		"workspaceContains:*fonline*"
 	],
 	"main": "./out/extension.js",
 	"contributes": {
@@ -36,7 +36,12 @@
 				"fonline.path": {
 					"type": "string",
 					"description": "Path to the FOnline Engine repository",
-					"scope": "machine-overridable"
+					"scope": "resource"
+				},
+				"fonline.cmake": {
+					"type": "string",
+					"description": "Path to the CMake contribution file",
+					"scope": "resource"
 				}
 			}
 		},
@@ -78,14 +83,6 @@
 				{
 					"id": "fonline-actions",
 					"name": "Actions"
-				},
-				{
-					"id": "fonline-content",
-					"name": "Content"
-				},
-				{
-					"id": "fonline-resources",
-					"name": "Resources"
 				}
 			]
 		}

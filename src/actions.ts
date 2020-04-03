@@ -20,12 +20,19 @@ export async function init(context: vscode.ExtensionContext) {
         if (actionEntry.command) {
             const foRoot = config.fonlineWslPath;
             const foWorkspace = config.workspaceWslPath;
-            const env = `export FO_ROOT=${foRoot}; export FO_WORKSPACE=${foWorkspace}`;
+            const foCMake = config.cmakeContribWslPath;
+            const env = `export FO_ROOT=${foRoot}; export FO_WORKSPACE=${foWorkspace}; export FO_CMAKE_CONTRIBUTION=${foCMake}`;
             shellArgs = `${env}; ${actionEntry.command}; read -p "Press enter to close terminal..."`;
         }
 
         const commandName = 'extension.' + label.substr(0, 1).toLowerCase() + label.replace(/ /g, '').substr(1);
         context.subscriptions.push(vscode.commands.registerCommand(commandName, () => {
+            for (const terminal of vscode.window.terminals) {
+                if (terminal.name == label) {
+                    console.log('skip run', commandName);
+                    return;
+                }
+            }
             console.log('run', commandName);
             const actionInstance = vscode.window.createTerminal({
                 name: label,

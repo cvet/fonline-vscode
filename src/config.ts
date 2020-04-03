@@ -2,10 +2,12 @@ import * as vscode from 'vscode';
 import * as fs from './fileSystem'
 
 export const wslShellPath: string = 'C:\\Windows\\System32\\wsl.exe';
-export let fonlinePath: string = '';
-export let fonlineWslPath: string;
+export let fonlinePath: string | undefined;
+export let fonlineWslPath: string | undefined;
 export let workspacePath: string = 'Workspace';
 export let workspaceWslPath: string;
+export let cmakeContribPath: string | undefined;
+export let cmakeContribWslPath: string | undefined;
 export const content: { label: string, path: string, type: string }[] = [];
 export const resources: { label: string, path: string, type: string }[] = [];
 export const actions: { label: string, group: string, command?: string }[] = [];
@@ -20,61 +22,59 @@ export async function init(context: vscode.ExtensionContext) {
     console.log('workspacePath', workspacePath, workspaceWslPath);
 
     // Evaluate fonline path
-    let foPath: string | undefined;
-    if (vscode.workspace.workspaceFolders) {
-        for (const folder of vscode.workspace.workspaceFolders) {
-            if (folder.uri.scheme == 'file') {
-                foPath = vscode.workspace.getConfiguration('fonline', folder).get<string>('path');
-                if (foPath) {
-                    console.log('take fonline path from workspace folder');
-                    foPath = fs.joinPath(folder.uri.fsPath, foPath);
+    while (fonlinePath === undefined || cmakeContribPath === undefined) {
+        let foPath: string | undefined;
+        let foCMake: string | undefined;
+        if (vscode.workspace.workspaceFolders) {
+            for (const folder of vscode.workspace.workspaceFolders) {
+                if (folder.uri.scheme == 'file') {
+                    foPath = vscode.workspace.getConfiguration('fonline', folder).get<string>('path');
+                    if (foPath) {
+                        foPath = fs.resolvePath(fs.joinPath(folder.uri.fsPath, foPath));
+                        console.log('take fonline path from workspace folder', foPath);
+                    }
+                    foCMake = vscode.workspace.getConfiguration('fonline', folder).get<string>('cmake');
+                    if (foCMake) {
+                        foCMake = fs.resolvePath(fs.joinPath(folder.uri.fsPath, foCMake));
+                        console.log('take fonline cmake path from workspace folder', foCMake);
+                    }
                     break;
                 }
             }
         }
-    }
-    if (!foPath) {
-        foPath = vscode.workspace.getConfiguration('fonline').get<string>('path');
-        if (foPath) {
-            console.log('take fonline path from workspace');
+        if (!foPath) {
+            await vscode.window.showErrorMessage('FOnline Engine repository path is not specified', 'Specify path').then((answer?: string) => {
+                if (answer === 'Specify path')
+                    vscode.commands.executeCommand('workbench.action.openGlobalSettings');
+            });
+        } else if (!await fs.exists(fs.joinPath(foPath, 'fonline-setup.ps1'))) {
+            await vscode.window.showErrorMessage('Invalid FOnline Engine repository path', 'Specify path').then((answer?: string) => {
+                if (answer === 'Specify path')
+                    vscode.commands.executeCommand('workbench.action.openGlobalSettings');
+            });
+        } else if (!foCMake) {
+            await vscode.window.showErrorMessage('CMake contribution file is not specified', 'Specify path').then((answer?: string) => {
+                if (answer === 'Specify path')
+                    vscode.commands.executeCommand('workbench.action.openGlobalSettings');
+            });
+        } else if (!await fs.exists(foCMake)) {
+            await vscode.window.showErrorMessage('Invalid CMake contribution file is not exist', 'Specify path').then((answer?: string) => {
+                if (answer === 'Specify path')
+                    vscode.commands.executeCommand('workbench.action.openGlobalSettings');
+            });
+        } else {
+            fonlinePath = foPath;
+            cmakeContribPath = foCMake;
         }
     }
-    if (!foPath) {
-        foPath = process.env.FONLINE_PATH;
-        if (foPath) {
-            console.log('take fonline path from env var');
-        }
-    }
-    if (!foPath && await fs.exists('setup.ps1') && await fs.exists('fonline.json')) {
-        console.log('take fonline path from cur dir');
-        foPath = fs.resolvePath('.');
-    }
-    if (!foPath && await fs.exists('../../setup.ps1') && await fs.exists('../../fonline.json')) {
-        console.log('take fonline path from dir two steps outside');
-        foPath = fs.resolvePath('../../');
-    }
-    if (!foPath) {
-        await vscode.window.showErrorMessage('FOnline Engine not found', 'Specify path').then((answer?: string) => {
-            if (answer === 'Specify path')
-                vscode.commands.executeCommand('workbench.action.openGlobalSettings');
-        });
-    } else {
-        if (!fs.isAbsolutePath(foPath))
-            foPath = fs.resolvePath(foPath);
-        fonlinePath = foPath;
-    }
+
     fonlineWslPath = winToWslPath(fonlinePath);
     console.log('fonlinePath', fonlinePath, fonlineWslPath);
+    cmakeContribWslPath = winToWslPath(cmakeContribPath);
+    console.log('cmakeContribPath', cmakeContribPath, cmakeContribWslPath);
 
     // Collect engine configs
-    const configPattern = new RegExp(/fonline.*\.json/);
-    const appliedFiles = new Set<string>();
-
-    async function applyFile(filePath: string) {
-        if (appliedFiles.has(filePath))
-            return;
-
-        appliedFiles.add(filePath);
+    async function applyConfig(filePath: string) {
         console.log('apply config', filePath);
 
         const buf = await fs.readfile(filePath);
@@ -107,6 +107,7 @@ export async function init(context: vscode.ExtensionContext) {
         if (json.actions) {
             const newActions = [];
             for (const action of json.actions) {
+                console.log(action);
                 newActions.push({
                     label: action.label,
                     group: action.group,
@@ -117,20 +118,15 @@ export async function init(context: vscode.ExtensionContext) {
         }
     }
 
-    console.log('check engine folder', fonlinePath);
-    for (const dirEntry of await fs.readdir(fonlinePath)) {
-        if (configPattern.test(fs.joinPath(fonlinePath, dirEntry))) {
-            await applyFile(fs.joinPath(fonlinePath, dirEntry));
-        }
-    }
+    await applyConfig(fs.joinPath(fonlinePath, 'BuildTools', 'vscode-config.json'))
 
     if (vscode.workspace.workspaceFolders) {
+        const configPattern = new RegExp(/fonline.*\.json/);
         for (const folder of vscode.workspace.workspaceFolders) {
-            console.log('check workspace folder', folder.name, folder.uri.scheme);
             if (folder.uri.scheme == 'file') {
                 for (const dirEntry of await fs.readdir(folder.uri.fsPath)) {
                     if (configPattern.test(fs.joinPath(folder.uri.fsPath, dirEntry))) {
-                        await applyFile(fs.joinPath(folder.uri.fsPath, dirEntry));
+                        await applyConfig(fs.joinPath(folder.uri.fsPath, dirEntry));
                     }
                 }
             }
