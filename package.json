@@ -114,7 +114,7 @@
 	},
 	"dependencies": {
 		"jqpropertygrid": "^1.0.0",
-		"jquery": "^3.4.1",
+		"jquery": "^3.5.0",
 		"jqueryui": "^1.11.1",
 		"mkdirp": "^1.0.3",
 		"rimraf": "^3.0.2",
