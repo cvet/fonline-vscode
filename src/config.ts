@@ -1,16 +1,19 @@
 import * as vscode from 'vscode';
 import * as fs from './fileSystem'
 
-export const wslShellPath: string = 'C:\\Windows\\System32\\wsl.exe';
-export let fonlinePath: string | undefined;
-export let fonlineWslPath: string | undefined;
+export enum BuildEnv {
+    Win,
+    Linux,
+    Mac,
+}
+
+export let buildEnv = BuildEnv.Win;
+export let fonlinePath: string;
 export let workspacePath: string = 'Workspace';
-export let workspaceWslPath: string;
-export let cmakeContribPath: string | undefined;
-export let cmakeContribWslPath: string | undefined;
+export let cmakeContribPath: string;
 export const content: { label: string, path: string, type: string }[] = [];
 export const resources: { label: string, path: string, type: string }[] = [];
-export const actions: { label: string, group: string, command?: string }[] = [];
+export const actions: { label?: string, group?: string, command?: string, env?: string }[] = [];
 
 export async function init(context: vscode.ExtensionContext) {
     // Evaluate workspace path
@@ -18,8 +21,8 @@ export async function init(context: vscode.ExtensionContext) {
         workspacePath = fs.joinPath(vscode.workspace.workspaceFolders[0].uri.fsPath, workspacePath);
     else
         workspacePath = fs.resolvePath(workspacePath);
-    workspaceWslPath = winToWslPath(workspacePath);
-    console.log('workspacePath', workspacePath, workspaceWslPath);
+
+    console.log('workspacePath', workspacePath);
 
     // Evaluate fonline path
     while (fonlinePath === undefined || cmakeContribPath === undefined) {
@@ -42,12 +45,13 @@ export async function init(context: vscode.ExtensionContext) {
                 }
             }
         }
+
         if (!foPath) {
             await vscode.window.showErrorMessage('FOnline Engine repository path is not specified', 'Specify path').then((answer?: string) => {
                 if (answer === 'Specify path')
                     vscode.commands.executeCommand('workbench.action.openGlobalSettings');
             });
-        } else if (!await fs.exists(fs.joinPath(foPath, 'fonline-setup.ps1'))) {
+        } else if (!await fs.exists(fs.joinPath(foPath, 'BuildTools', 'prepare-win-workspace.ps1'))) {
             await vscode.window.showErrorMessage('Invalid FOnline Engine repository path', 'Specify path').then((answer?: string) => {
                 if (answer === 'Specify path')
                     vscode.commands.executeCommand('workbench.action.openGlobalSettings');
@@ -68,10 +72,8 @@ export async function init(context: vscode.ExtensionContext) {
         }
     }
 
-    fonlineWslPath = winToWslPath(fonlinePath);
-    console.log('fonlinePath', fonlinePath, fonlineWslPath);
-    cmakeContribWslPath = winToWslPath(cmakeContribPath);
-    console.log('cmakeContribPath', cmakeContribPath, cmakeContribWslPath);
+    console.log('fonlinePath', fonlinePath);
+    console.log('cmakeContribPath', cmakeContribPath);
 
     // Collect engine configs
     async function applyConfig(filePath: string) {
@@ -107,11 +109,11 @@ export async function init(context: vscode.ExtensionContext) {
         if (json.actions) {
             const newActions = [];
             for (const action of json.actions) {
-                console.log(action);
                 newActions.push({
                     label: action.label,
                     group: action.group,
-                    command: action.command
+                    command: action.command,
+                    env: action.env
                 });
             }
             actions.unshift(...newActions);
@@ -132,12 +134,4 @@ export async function init(context: vscode.ExtensionContext) {
             }
         }
     }
-}
-
-function winToWslPath(winPath: string): string {
-    let wslPath = winPath;
-    if (wslPath[1] == ':')
-        wslPath = '/mnt/' + wslPath[0].toLowerCase() + wslPath.substr(2);
-    wslPath = wslPath.replace(/\\/g, '/');
-    return wslPath;
 }

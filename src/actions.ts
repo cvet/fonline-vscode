@@ -5,7 +5,6 @@ import * as config from './config';
 interface ActionTreeEntry {
     label: string;
     command?: string;
-    shellArgs?: string;
     children?: ActionTreeEntry[];
 }
 
@@ -13,19 +12,54 @@ export async function init(context: vscode.ExtensionContext) {
     const actions: ActionTreeEntry[] = [];
 
     for (const actionEntry of config.actions) {
+        if (actionEntry.label === undefined || actionEntry.group === undefined ||
+            actionEntry.command === undefined || actionEntry.env === undefined) {
+            continue;
+        }
+
+        if ((config.buildEnv == config.BuildEnv.Win && !actionEntry.env.includes('win') && !actionEntry.env.includes('wsl')) ||
+            (config.buildEnv == config.BuildEnv.Linux && !actionEntry.env.includes('linux')) ||
+            (config.buildEnv == config.BuildEnv.Mac && !actionEntry.env.includes('mac'))) {
+            continue;
+        }
+
+        const wslCall = config.buildEnv == config.BuildEnv.Win && actionEntry.env.includes('wsl');
+
+        let shellPath: string;
+        if (config.buildEnv == config.BuildEnv.Win) {
+            if (wslCall) {
+                shellPath = 'C:\\Windows\\System32\\wsl.exe';
+            }
+            else {
+                shellPath = 'C:\\Windows\\System32\\WindowsPowershell\\v1.0\\powershell.exe';
+            }
+        }
+        else {
+            shellPath = 'bash';
+        }
+
+        let shellArgs: string;
+        if (config.buildEnv == config.BuildEnv.Win) {
+            if (wslCall) {
+                const foRoot = winToWslPath(config.fonlinePath);
+                const foWorkspace = winToWslPath(config.workspacePath);
+                const foCMake = winToWslPath(config.cmakeContribPath);
+                const env = `export FO_ROOT=${foRoot}; export FO_WORKSPACE=${foWorkspace}; export FO_CMAKE_CONTRIBUTION=${foCMake}`;
+                shellArgs = `${env}; ${actionEntry.command}; read -p "Press enter to close terminal..."`;
+            }
+            else {
+                shellArgs = `Invoke-Command -ScriptBlock { ${actionEntry.command} }; pause "Press any key to close terminal..."`;
+            }
+        }
+        else {
+            shellArgs = `${actionEntry.command}`;
+        }
+
         const label = actionEntry.label;
         console.log('register', label);
 
-        let shellArgs: string | undefined;
-        if (actionEntry.command) {
-            const foRoot = config.fonlineWslPath;
-            const foWorkspace = config.workspaceWslPath;
-            const foCMake = config.cmakeContribWslPath;
-            const env = `export FO_ROOT=${foRoot}; export FO_WORKSPACE=${foWorkspace}; export FO_CMAKE_CONTRIBUTION=${foCMake}`;
-            shellArgs = `${env}; ${actionEntry.command}; read -p "Press enter to close terminal..."`;
-        }
-
         const commandName = 'extension.' + label.substr(0, 1).toLowerCase() + label.replace(/ /g, '').substr(1);
+
         context.subscriptions.push(vscode.commands.registerCommand(commandName, () => {
             for (const terminal of vscode.window.terminals) {
                 if (terminal.name == label) {
@@ -33,20 +67,27 @@ export async function init(context: vscode.ExtensionContext) {
                     return;
                 }
             }
+
             console.log('run', commandName);
+            console.log('run command', actionEntry.command);
+            console.log('run cwd', config.fonlinePath);
+
             const actionInstance = vscode.window.createTerminal({
                 name: label,
-                shellPath: config.wslShellPath,
+                shellPath: shellPath,
                 shellArgs: shellArgs,
                 cwd: config.fonlinePath,
+                env: { 'FO_ROOT': config.fonlinePath, 'FO_WORKSPACE': config.workspacePath, 'FO_CMAKE_CONTRIBUTION': config.cmakeContribPath },
                 hideFromUser: false
             });
+
             actionInstance.show();
         }));
 
         let rootEntry = actions.find((value: ActionTreeEntry) => {
             return value.label == actionEntry.group;
         });
+
         if (!rootEntry) {
             rootEntry = { label: actionEntry.group, children: [] };
             actions.push(rootEntry);
@@ -55,35 +96,13 @@ export async function init(context: vscode.ExtensionContext) {
         if (rootEntry.children) {
             rootEntry.children.push({
                 label: label,
-                command: commandName,
-                shellArgs: shellArgs
+                command: commandName
             });
         }
     }
 
     const actionsTree = vscode.window.createTreeView('fonline-actions', { treeDataProvider: new ActionTree(actions) });
     context.subscriptions.push(actionsTree);
-}
-
-export async function execute(command: string, ...shellArgs: string[]): Promise<number> {
-    const foRoot = config.fonlineWslPath;
-    const foWorkspace = config.workspaceWslPath;
-    const env = `export FO_ROOT=${foRoot}; export FO_WORKSPACE=${foWorkspace}`;
-
-    let exitCode: number | undefined;
-    childProcess.exec(`wsl ${env}; ${command}`, {
-        cwd: config.fonlinePath,
-        windowsHide: true
-    }, (error: childProcess.ExecException | null, stdout: string, stderr: string) => {
-        exitCode = error ? error.code : 0;
-        console.log('execute', command, exitCode)
-    });
-
-    while (exitCode === undefined) {
-        await new Promise(resolve => setTimeout(resolve, 100));
-    }
-
-    return exitCode;
 }
 
 class ActionTree implements vscode.TreeDataProvider<ActionTreeEntry> {
@@ -97,9 +116,17 @@ class ActionTree implements vscode.TreeDataProvider<ActionTreeEntry> {
     getTreeItem(element: ActionTreeEntry): vscode.TreeItem {
         return {
             label: element.label,
-            tooltip: `Open ${element.label}`,
+            tooltip: `Run ${element.label}`,
             collapsibleState: element.children ? vscode.TreeItemCollapsibleState.Collapsed : undefined,
             command: element.command ? { command: element.command, title: element.label } : undefined
         }
     }
+}
+
+function winToWslPath(winPath: string): string {
+    let wslPath = winPath;
+    if (wslPath[1] == ':')
+        wslPath = '/mnt/' + wslPath[0].toLowerCase() + wslPath.substr(2);
+    wslPath = wslPath.replace(/\\/g, '/');
+    return wslPath;
 }

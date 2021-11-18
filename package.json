@@ -45,30 +45,6 @@
 				}
 			}
 		},
-		"commands": [
-			{
-				"command": "extension.compile",
-				"title": "Compile",
-				"icon": {
-					"light": "resources/compile-light.png",
-					"dark": "resources/compile-dark.png"
-				}
-			}
-		],
-		"keybindings": [
-			{
-				"command": "extension.compile",
-				"key": "f7"
-			}
-		],
-		"menus": {
-			"editor/title": [
-				{
-					"command": "extension.compile",
-					"group": "navigation"
-				}
-			]
-		},
 		"viewsContainers": {
 			"activitybar": [
 				{
@@ -106,9 +82,9 @@
 		"@types/vscode": "^1.42.0",
 		"@typescript-eslint/eslint-plugin": "^2.19.2",
 		"@typescript-eslint/parser": "^2.19.2",
-		"eslint": "^6.8.0",
+		"eslint": "^8.2.0",
 		"glob": "^7.1.6",
-		"mocha": "^7.0.1",
+		"mocha": "^9.1.3",
 		"typescript": "^3.7.5",
 		"vscode-test": "^1.3.0"
 	},
@@ -119,8 +95,5 @@
 		"mkdirp": "^1.0.3",
 		"rimraf": "^3.0.2",
 		"uikit": "^3.3.1"
-	},
-	"extensionPack": [
-		"twxs.cmake"
-	]
+	}
 }
