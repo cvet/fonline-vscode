@@ -26,7 +26,7 @@
 		"Other"
 	],
 	"activationEvents": [
-		"workspaceContains:*fonline*"
+		"workspaceContains:BuildTools"
 	],
 	"main": "./out/extension.js",
 	"contributes": {

@@ -25,7 +25,7 @@ export async function init(context: vscode.ExtensionContext) {
 
         const wslCall = config.buildEnv == config.BuildEnv.Win && actionEntry.env.includes('wsl');
 
-        let shellPath: string;
+        let shellPath: string | undefined;
         if (config.buildEnv == config.BuildEnv.Win) {
             if (wslCall) {
                 shellPath = 'C:\\Windows\\System32\\wsl.exe';
@@ -38,7 +38,7 @@ export async function init(context: vscode.ExtensionContext) {
             shellPath = 'bash';
         }
 
-        let shellArgs: string;
+        let shellArgs: string | string[];
         if (config.buildEnv == config.BuildEnv.Win) {
             if (wslCall) {
                 const foRoot = winToWslPath(config.fonlinePath);
@@ -52,7 +52,7 @@ export async function init(context: vscode.ExtensionContext) {
             }
         }
         else {
-            shellArgs = `${actionEntry.command}`;
+            shellArgs = ['-c', `${actionEntry.command}; read -p "Press enter to close terminal..."`];
         }
 
         const label = actionEntry.label;

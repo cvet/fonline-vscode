@@ -16,11 +16,24 @@ export const resources: { label: string, path: string, type: string }[] = [];
 export const actions: { label?: string, group?: string, command?: string, env?: string }[] = [];
 
 export async function init(context: vscode.ExtensionContext) {
+    // Detect env
+    if (process.platform == 'win32') {
+        buildEnv = BuildEnv.Win;
+    }
+    else if (process.platform == 'darwin') {
+        buildEnv = BuildEnv.Mac;
+    }
+    else {
+        buildEnv = BuildEnv.Linux;
+    }
+
     // Evaluate workspace path
-    if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders[0].uri.scheme == 'file')
+    if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders[0].uri.scheme == 'file') {
         workspacePath = fs.joinPath(vscode.workspace.workspaceFolders[0].uri.fsPath, workspacePath);
-    else
+    }
+    else {
         workspacePath = fs.resolvePath(workspacePath);
+    }
 
     console.log('workspacePath', workspacePath);
 
@@ -48,23 +61,27 @@ export async function init(context: vscode.ExtensionContext) {
 
         if (!foPath) {
             await vscode.window.showErrorMessage('FOnline Engine repository path is not specified', 'Specify path').then((answer?: string) => {
-                if (answer === 'Specify path')
+                if (answer === 'Specify path') {
                     vscode.commands.executeCommand('workbench.action.openGlobalSettings');
+                }
             });
-        } else if (!await fs.exists(fs.joinPath(foPath, 'BuildTools', 'prepare-win-workspace.ps1'))) {
+        } else if (!await fs.exists(fs.joinPath(foPath, 'BuildTools'))) {
             await vscode.window.showErrorMessage('Invalid FOnline Engine repository path', 'Specify path').then((answer?: string) => {
-                if (answer === 'Specify path')
+                if (answer === 'Specify path') {
                     vscode.commands.executeCommand('workbench.action.openGlobalSettings');
+                }
             });
         } else if (!foCMake) {
             await vscode.window.showErrorMessage('CMake contribution file is not specified', 'Specify path').then((answer?: string) => {
-                if (answer === 'Specify path')
+                if (answer === 'Specify path') {
                     vscode.commands.executeCommand('workbench.action.openGlobalSettings');
+                }
             });
         } else if (!await fs.exists(foCMake)) {
             await vscode.window.showErrorMessage('Invalid CMake contribution file is not exist', 'Specify path').then((answer?: string) => {
-                if (answer === 'Specify path')
+                if (answer === 'Specify path') {
                     vscode.commands.executeCommand('workbench.action.openGlobalSettings');
+                }
             });
         } else {
             fonlinePath = foPath;
