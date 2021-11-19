@@ -23,6 +23,14 @@ export async function init(context: vscode.ExtensionContext) {
             continue;
         }
 
+        if (config.isRemoteDev && actionEntry.env.includes('noremote')) {
+            continue;
+        }
+
+        if (!config.isEngineDev && actionEntry.env.includes('engine')) {
+            continue;
+        }
+
         const wslCall = config.buildEnv == config.BuildEnv.Win && actionEntry.env.includes('wsl');
 
         let shellPath: string | undefined;

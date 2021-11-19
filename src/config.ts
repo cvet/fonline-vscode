@@ -8,6 +8,8 @@ export enum BuildEnv {
 }
 
 export let buildEnv = BuildEnv.Win;
+export let isRemoteDev = false;
+export let isEngineDev = false;
 export let fonlinePath: string;
 export let workspacePath: string = 'Workspace';
 export let cmakeContribPath: string;
@@ -16,6 +18,8 @@ export const resources: { label: string, path: string, type: string }[] = [];
 export const actions: { label?: string, group?: string, command?: string, env?: string }[] = [];
 
 export async function init(context: vscode.ExtensionContext) {
+    isRemoteDev = vscode.env.remoteName !== undefined;
+
     // Detect env
     if (process.platform == 'win32') {
         buildEnv = BuildEnv.Win;
@@ -46,6 +50,7 @@ export async function init(context: vscode.ExtensionContext) {
                 if (folder.uri.scheme == 'file') {
                     foPath = vscode.workspace.getConfiguration('fonline', folder).get<string>('path');
                     if (foPath) {
+                        isEngineDev = foPath == '.';
                         foPath = fs.resolvePath(fs.joinPath(folder.uri.fsPath, foPath));
                         console.log('take fonline path from workspace folder', foPath);
                     }
