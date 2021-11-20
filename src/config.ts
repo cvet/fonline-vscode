@@ -70,7 +70,7 @@ export async function init(context: vscode.ExtensionContext) {
                     vscode.commands.executeCommand('workbench.action.openGlobalSettings');
                 }
             });
-        } else if (!await fs.exists(fs.joinPath(foPath, 'BuildTools'))) {
+        } else if (!await fs.exists(fs.joinPath(foPath, 'BuildTools', 'vscode-config.json'))) {
             await vscode.window.showErrorMessage('Invalid FOnline Engine repository path', 'Specify path').then((answer?: string) => {
                 if (answer === 'Specify path') {
                     vscode.commands.executeCommand('workbench.action.openGlobalSettings');
@@ -145,7 +145,7 @@ export async function init(context: vscode.ExtensionContext) {
     await applyConfig(fs.joinPath(fonlinePath, 'BuildTools', 'vscode-config.json'))
 
     if (vscode.workspace.workspaceFolders) {
-        const configPattern = new RegExp(/fonline.*\.json/);
+        const configPattern = new RegExp(/.*vscode-config\.json/);
         for (const folder of vscode.workspace.workspaceFolders) {
             if (folder.uri.scheme == 'file') {
                 for (const dirEntry of await fs.readdir(folder.uri.fsPath)) {

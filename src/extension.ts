@@ -8,16 +8,8 @@ import * as fs from './fileSystem'
 export function activate(context: vscode.ExtensionContext) {
   try {
     init(context);
-
-    context.subscriptions.push(
-      vscode.commands.registerCommand('extension.run', () => {
-      }));
-
-    context.subscriptions.push(
-      vscode.commands.registerCommand('extension.build', () => {
-      }));
   } catch (error) {
-    vscode.window.showErrorMessage(error);
+    vscode.window.showErrorMessage(`${error}`);
   }
 }
 

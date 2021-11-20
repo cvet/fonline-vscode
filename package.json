@@ -26,7 +26,7 @@
 		"Other"
 	],
 	"activationEvents": [
-		"workspaceContains:BuildTools"
+		"onView:fonlineActions"
 	],
 	"main": "./out/extension.js",
 	"contributes": {
@@ -57,7 +57,7 @@
 		"views": {
 			"fonline": [
 				{
-					"id": "fonline-actions",
+					"id": "fonlineActions",
 					"name": "Actions"
 				}
 			]

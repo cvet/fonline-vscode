@@ -109,7 +109,7 @@ export async function init(context: vscode.ExtensionContext) {
         }
     }
 
-    const actionsTree = vscode.window.createTreeView('fonline-actions', { treeDataProvider: new ActionTree(actions) });
+    const actionsTree = vscode.window.createTreeView('fonlineActions', { treeDataProvider: new ActionTree(actions) });
     context.subscriptions.push(actionsTree);
 }
 
