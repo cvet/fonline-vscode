@@ -58,7 +58,18 @@
 			"fonline": [
 				{
 					"id": "fonlineActions",
-					"name": "Actions"
+					"name": "Actions",
+					"visibility": "visible"
+				},
+				{
+					"id": "fonlineContent",
+					"name": "Content",
+					"visibility": "collapsed"
+				},
+				{
+					"id": "fonlineResources",
+					"name": "Resources",
+					"visibility": "collapsed"
 				}
 			]
 		}
